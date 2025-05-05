@@ -10,13 +10,17 @@ using (var connection = await factory.CreateConnectionAsync())
     var channel = await connection.CreateChannelAsync();
     await channel.QueueDeclareAsync("hello-queue",true,false,false);
 
+    Enumerable.Range(1, 50).ToList().ForEach(x =>
+    {
+        string message = $"Message {x}";
 
-    string message = "Hello World";
+        var messageBody = Encoding.UTF8.GetBytes(message);
 
-    var messageBody = Encoding.UTF8.GetBytes(message);
+        channel.BasicPublishAsync(string.Empty, "hello-queue", messageBody);
 
-    await channel.BasicPublishAsync(string.Empty, "hello-queue",messageBody);
+        Console.WriteLine($"Mesaj Gönderilmiştir. {message}");
+    });
 
-    Console.WriteLine("Mesaj Gönderilmiştir.");
+   
     Console.ReadLine();
 }
