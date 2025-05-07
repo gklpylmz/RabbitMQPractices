@@ -10,12 +10,18 @@ factory.Uri = new Uri("amqp://localhost:5672");
 using (var connection = await factory.CreateConnectionAsync())
 {
     var channel = await connection.CreateChannelAsync();
-    //await channel.QueueDeclareAsync("hello-queue", true, false, false);
+
+    var randomQueueName = channel.QueueDeclareAsync().Result.QueueName;
+
+    await channel.QueueBindAsync(randomQueueName,"logs-fanout","",null);
+
 
     await channel.BasicQosAsync(0, 1, false);
     var consumer = new AsyncEventingBasicConsumer(channel);
 
-    await channel.BasicConsumeAsync("hello-queue",false,consumer);
+    await channel.BasicConsumeAsync(randomQueueName,false,consumer);
+
+    Console.WriteLine("Loglar dinleniyor");
 
     consumer.ReceivedAsync += async (object sender, BasicDeliverEventArgs e) =>
     {
