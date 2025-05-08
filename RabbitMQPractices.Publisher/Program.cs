@@ -10,27 +10,20 @@ var connection = await factory.CreateConnectionAsync();
 var channel = await connection.CreateChannelAsync();
 
 //Durable :true exchange kaybolmaması için.
-await channel.ExchangeDeclareAsync("logs-direct", durable: true, type: ExchangeType.Direct);
+await channel.ExchangeDeclareAsync("logs-topic", durable: true, type: ExchangeType.Topic);
 
-Enum.GetNames(typeof(LogNames)).ToList().ForEach(async x =>
-{
-    var routeKey = $"route-{x}";
-    var queueName = $"direct-queue-{x}";
-    await channel.QueueDeclareAsync(queueName, true, false, false);
-
-    await channel.QueueBindAsync(queueName, "logs-direct", routeKey,null);
-});
-
+Random rnd = new Random();
 Enumerable.Range(1, 50).ToList().ForEach(x =>
  {
-     LogNames log = (LogNames)new Random().Next(1, 5);
-     string message = $"Log-Type : {log}";
+     LogNames log1 = (LogNames)rnd.Next(1, 5);
+     LogNames log2 = (LogNames)rnd.Next(1, 5);
+     LogNames log3 = (LogNames)rnd.Next(1, 5);
 
+     string message = $"Log-Type : {log1}-{log2}-{log3}";
      var messageBody = Encoding.UTF8.GetBytes(message);
+     var routeKey = $"{log1}.{log2}.{log3}";
 
-     var routeKey = $"route-{log}";
-
-     channel.BasicPublishAsync("logs-direct", routeKey,messageBody);
+     channel.BasicPublishAsync("logs-topic", routeKey,messageBody);
 
      Console.WriteLine($"Log Gönderilmiştir. {message}");
  });

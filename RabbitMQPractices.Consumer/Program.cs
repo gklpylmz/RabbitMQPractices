@@ -15,8 +15,11 @@ var channel = await connection.CreateChannelAsync();
 await channel.BasicQosAsync(0, 1, false);
 var consumer = new AsyncEventingBasicConsumer(channel);
 
-var queueName = "direct-queue-Critical";
-
+var queueName = channel.QueueDeclareAsync().Result.QueueName;
+//"Info.#
+//. Tek bir karakteri ifade ediyorken # birden fazla karaketeri ifade eder.
+var routeKey = "*.*.Warning";
+await channel.QueueBindAsync(queueName, "logs-topic", routeKey);
 
 Console.WriteLine("Loglar dinleniyor");
 
