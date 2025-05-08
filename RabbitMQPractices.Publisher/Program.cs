@@ -10,23 +10,20 @@ var connection = await factory.CreateConnectionAsync();
 var channel = await connection.CreateChannelAsync();
 
 //Durable :true exchange kaybolmaması için.
-await channel.ExchangeDeclareAsync("logs-topic", durable: true, type: ExchangeType.Topic);
+await channel.ExchangeDeclareAsync("header-exchange", durable: true, type: ExchangeType.Headers);
 
-Random rnd = new Random();
-Enumerable.Range(1, 50).ToList().ForEach(x =>
- {
-     LogNames log1 = (LogNames)rnd.Next(1, 5);
-     LogNames log2 = (LogNames)rnd.Next(1, 5);
-     LogNames log3 = (LogNames)rnd.Next(1, 5);
+Dictionary<string,object> headers = new Dictionary<string, object>();
+headers.Add("format", "pdf");
+headers.Add("shape", "a");
 
-     string message = $"Log-Type : {log1}-{log2}-{log3}";
-     var messageBody = Encoding.UTF8.GetBytes(message);
-     var routeKey = $"{log1}.{log2}.{log3}";
+var properties = new BasicProperties()
+{
+    Headers = headers,
+};
 
-     channel.BasicPublishAsync("logs-topic", routeKey,messageBody);
+//await channel.BasicPublishAsync("header-exchange", string.Empty,
+//    Encoding.UTF8.GetBytes("header mesajım"),basicProperties:properties);
 
-     Console.WriteLine($"Log Gönderilmiştir. {message}");
- });
-
+Console.WriteLine("Mesaj Gönderilmiştir.");
 
 Console.ReadLine();

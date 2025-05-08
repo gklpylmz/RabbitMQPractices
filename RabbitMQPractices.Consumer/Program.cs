@@ -16,10 +16,12 @@ await channel.BasicQosAsync(0, 1, false);
 var consumer = new AsyncEventingBasicConsumer(channel);
 
 var queueName = channel.QueueDeclareAsync().Result.QueueName;
-//"Info.#
-//. Tek bir karakteri ifade ediyorken # birden fazla karaketeri ifade eder.
-var routeKey = "*.*.Warning";
-await channel.QueueBindAsync(queueName, "logs-topic", routeKey);
+
+Dictionary<string, object> headers = new Dictionary<string, object>();
+headers.Add("format", "pdf");
+headers.Add("shape", "a");
+headers.Add("x-match", "all");
+await channel.QueueBindAsync(queueName, "header-exchange",string.Empty,headers);
 
 Console.WriteLine("Loglar dinleniyor");
 
@@ -31,7 +33,6 @@ consumer.ReceivedAsync += async (object sender, BasicDeliverEventArgs e) =>
 
     Console.WriteLine("Gelen Mesaj : " + message);
 
-    File.AppendAllText("log-critical.txt", message + "\n");
 
     await channel.BasicAckAsync(e.DeliveryTag, false);
 };
