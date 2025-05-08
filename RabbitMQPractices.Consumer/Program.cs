@@ -7,33 +7,32 @@ var factory = new ConnectionFactory();
 factory.Uri = new Uri("amqp://localhost:5672");
 
 
-using (var connection = await factory.CreateConnectionAsync())
+var connection = await factory.CreateConnectionAsync();
+var channel = await connection.CreateChannelAsync();
+
+
+
+await channel.BasicQosAsync(0, 1, false);
+var consumer = new AsyncEventingBasicConsumer(channel);
+
+var queueName = "direct-queue-Critical";
+
+
+Console.WriteLine("Loglar dinleniyor");
+
+consumer.ReceivedAsync += async (object sender, BasicDeliverEventArgs e) =>
 {
-    var channel = await connection.CreateChannelAsync();
+    var message = Encoding.UTF8.GetString(e.Body.ToArray());
 
-    var randomQueueName = channel.QueueDeclareAsync().Result.QueueName;
+    Thread.Sleep(1500);
 
-    await channel.QueueBindAsync(randomQueueName,"logs-fanout","",null);
+    Console.WriteLine("Gelen Mesaj : " + message);
+
+    File.AppendAllText("log-critical.txt", message + "\n");
+
+    await channel.BasicAckAsync(e.DeliveryTag, false);
+};
+await channel.BasicConsumeAsync(queueName, false, consumer);
+Console.ReadLine();
 
 
-    await channel.BasicQosAsync(0, 1, false);
-    var consumer = new AsyncEventingBasicConsumer(channel);
-
-    await channel.BasicConsumeAsync(randomQueueName,false,consumer);
-
-    Console.WriteLine("Loglar dinleniyor");
-
-    consumer.ReceivedAsync += async (object sender, BasicDeliverEventArgs e) =>
-    {
-        var message = Encoding.UTF8.GetString(e.Body.ToArray());
-
-        Thread.Sleep(1500);
-
-        Console.WriteLine("Gelen Mesaj : " +message);
-
-        await channel.BasicAckAsync(e.DeliveryTag,false);
-    };
-
-    Console.ReadLine();
-   
-}
