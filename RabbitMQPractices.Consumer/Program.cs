@@ -1,7 +1,9 @@
 ﻿using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using Shared;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 
 var factory = new ConnectionFactory();
 factory.Uri = new Uri("amqp://localhost:5672");
@@ -20,7 +22,7 @@ var queueName = channel.QueueDeclareAsync().Result.QueueName;
 Dictionary<string, object> headers = new Dictionary<string, object>();
 headers.Add("format", "pdf");
 headers.Add("shape", "a");
-headers.Add("x-match", "all");
+headers.Add("x-match", "any");
 await channel.QueueBindAsync(queueName, "header-exchange",string.Empty,headers);
 
 Console.WriteLine("Loglar dinleniyor");
@@ -28,10 +30,11 @@ Console.WriteLine("Loglar dinleniyor");
 consumer.ReceivedAsync += async (object sender, BasicDeliverEventArgs e) =>
 {
     var message = Encoding.UTF8.GetString(e.Body.ToArray());
+    Product p = JsonSerializer.Deserialize<Product>(message);
 
     Thread.Sleep(1500);
 
-    Console.WriteLine("Gelen Mesaj : " + message);
+    Console.WriteLine("Gelen Mesaj : " + p.Id + " " +p.Name + " " + p.Price + " " + p.Stock);
 
 
     await channel.BasicAckAsync(e.DeliveryTag, false);

@@ -1,6 +1,8 @@
 ﻿using RabbitMQ.Client;
 using RabbitMQPractices.Publisher;
+using Shared;
 using System.Text;
+using System.Text.Json;
 
 var factory = new ConnectionFactory();
 factory.Uri = new Uri("amqp://localhost:5672");
@@ -22,8 +24,17 @@ var properties = new BasicProperties()
     Persistent = true,
 };
 
+var product = new Product()
+{
+    Id = 1,
+    Name = "Defter",
+    Price= 100 ,
+    Stock= 10,
+};
+var productJson = JsonSerializer.Serialize(product);
+
 //await channel.BasicPublishAsync("header-exchange", string.Empty,
-//    Encoding.UTF8.GetBytes("header mesajım"),basicProperties:properties);
+//    Encoding.UTF8.GetBytes(productJson),basicProperties:properties);
 
 Console.WriteLine("Mesaj Gönderilmiştir.");
 
