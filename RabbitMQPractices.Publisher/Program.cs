@@ -19,6 +19,7 @@ headers.Add("shape", "a");
 var properties = new BasicProperties()
 {
     Headers = headers,
+    Persistent = true,
 };
 
 //await channel.BasicPublishAsync("header-exchange", string.Empty,
